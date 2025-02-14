@@ -1,31 +1,33 @@
-// script.js
-document.addEventListener("DOMContentLoaded", function () {
-    const reviewButtons = document.querySelectorAll("button");
+document.addEventListener("DOMContentLoaded", function() {
+    // Attach click event listeners to the classify buttons
+    const classifyButtons = document.querySelectorAll('.classify-btn');
 
-    reviewButtons.forEach(button => {
-        button.addEventListener("click", function (event) {
-            event.preventDefault();  // Prevent default form submission
-
-            const sentence = button.innerText;  // Get the review sentence
-            const formData = new FormData();
-            formData.append('sentence', sentence);
-
-            // Perform the AJAX request
+    classifyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const reviewText = this.getAttribute('data-review');
+            // Send AJAX request to Flask backend
             fetch('/classify', {
                 method: 'POST',
-                body: formData,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ sentence: reviewText })
             })
             .then(response => response.json())
             .then(data => {
-                // Handle the response data
+                // Inject the result into the result container
                 const resultContainer = document.getElementById('result-container');
-                resultContainer.innerHTML = `
-                    <h3>Classification Result</h3>
-                    <p><strong>Input Sentence:</strong> ${data.sentence}</p>
-                    <p><strong>Predicted Sentiment:</strong> ${data.result}</p>
-                    <p><strong>Actual Sentiment:</strong> ${data.actual}</p>
-                    <p><strong>Match:</strong> ${data.match}</p>
-                `;
+                if (data.error) {
+                    resultContainer.innerHTML = `<p>Error: ${data.error}</p>`;
+                } else {
+                    resultContainer.innerHTML = `
+                        <h2>Classification Result</h2>
+                        <p><strong>Input Sentence:</strong> ${data.sentence}</p>
+                        <p><strong>Predicted Sentiment:</strong> ${data.result}</p>
+                        <p><strong>Actual Sentiment:</strong> ${data.actual}</p>
+                        <p><strong>Match:</strong> ${data.match}</p>
+                    `;
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
